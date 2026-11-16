@@ -1,0 +1,11 @@
+# 默认自动处理文本换行
+* text=auto
+
+# shell 脚本必须保持 LF，否则在 Linux/macOS 上执行会报错
+*.sh text eol=lf
+
+# 二进制文件不做换行转换
+*.pt binary
+*.png binary
+*.jpg binary
+*.zip binary

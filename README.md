@@ -1,8 +1,41 @@
 # CIR Similarity-Level Fusion
 
-Official implementation of the method described in
-**《面向组合图像检索的相似度层多模型融合方法》**
-(*A Similarity-Level Multi-Model Fusion Method for Composed Image Retrieval*).
+Official implementation of *A Similarity-Level Multi-Model Fusion Method for Composed Image Retrieval*
+（《面向组合图像检索的相似度层多模型融合方法》）.
+The manuscript is currently under review; citation information will be updated upon acceptance.
+
+## Overview (English)
+
+We fuse several **frozen** composed image retrieval (CIR) baselines at the **similarity level**,
+so that no baseline has to be retrained end-to-end.
+
+- **Input.** The similarity vectors produced by four baselines (CLIP4CIR, TG-CIR, BLIP4CIR, SPRC)
+  are stacked along the model axis into an `[N, 4, D]` tensor.
+- **Fusion head.** A lightweight 1D depthwise-separable convolution (`LightDW`) maps the stack into a
+  shared representation space, with a residual path that preserves each baseline's original scores.
+- **Dynamic weighting.** A learnable per-dimension weight (`nn.Conv1d(4, 1, 1)`) aggregates the fused
+  representation into a single relevance score.
+- **Training.** InfoNCE / cross-entropy over the fused score. Only the fusion head is optimized;
+  all four baselines remain frozen, so the whole procedure costs minutes rather than GPU-days.
+
+Main results: CIRR Recall@10 **93.21%**, CIRR mean Rmean **84.43%**, FashionIQ mean Rmean **67.48%**
+(avg. over Dress / Shirt / Toptee).
+
+```bash
+pip install -r requirements.txt   # torch, torchvision, numpy, Pillow, tqdm
+bash run.sh                       # train + evaluate, once data and features are in place
+```
+
+> **Data and baseline features are not included in this repository.** It ships the code and the two
+> trained fusion heads (~10 KB each) only. The CIRR / FashionIQ annotations remain under their own
+> licenses, and the ~14 GB of pre-computed baseline features are available from the authors on
+> request (caiyw18@chinaunicom.cn). See [`docs/DATA_PREPARATION.md`](docs/DATA_PREPARATION.md).
+>
+> Two practical notes: every command must be run from the repository root (the scripts resolve all
+> paths relatively), and the FashionIQ evaluation reads original images, so `fashionIQ_dataset/images/`
+> must be present locally. The CIRR evaluation needs annotations only.
+
+---
 
 ## 方法概述
 
@@ -145,13 +178,16 @@ bash run.sh
 若本工作对你有帮助，请引用：
 
 ```bibtex
-@article{cirsimfusion2026,
-  title   = {面向组合图像检索的相似度层多模型融合方法},
-  journal = {计算机应用与软件},
-  author  = {作者列表},
-  year    = {2026}
+@misc{cirsimfusion2026,
+  title        = {面向组合图像检索的相似度层多模型融合方法},
+  author       = {作者列表},
+  year         = {2026},
+  note         = {Manuscript under review}
 }
 ```
+
+> 论文尚在审稿中，录用后将更新为正式 `@article` 条目（补全期刊、卷期与页码）。
+> 在此之前引用上述条目即可，不会产生错误指向。
 
 ## 许可证
 
